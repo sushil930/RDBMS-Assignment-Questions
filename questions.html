@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RDBMS Interactive Study Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chosen Palette: Slate & Sky -->
+    <!-- Application Structure Plan: The application uses a two-panel, responsive layout. A fixed sidebar on the left serves as a hierarchical navigation menu, listing the 5 units from the syllabus. Clicking a unit expands an accordion to show the 5 questions within it. The main content panel on the right dynamically displays the selected question and its detailed answer. This structure was chosen because it provides a clear, organized overview of the syllabus, prevents overwhelming the user with a single long document, and allows for quick, focused access to specific topics without losing context. The user flow is simple: select a unit, select a question, and view the content. -->
+    <!-- Visualization & Content Choices: The source report consists of textual questions and answers. The primary goal is clear presentation and easy navigation of this text. Complex data visualizations are not required. The "diagrams" mentioned in the report (e.g., Three-Schema Architecture, ER models, Joins) are conceptual. Therefore, they are recreated using structured HTML and styled with Tailwind CSS to represent relationships and flows visually. This method avoids external libraries and graphics (NO SVG/Mermaid), keeping the application self-contained and fast while effectively illustrating the concepts. For example, nested divs with borders represent architectures, and flexbox layouts create simple flowcharts. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        .content-card {
+            transition: opacity 0.3s ease-in-out;
+        }
+        .content-hidden {
+            display: none;
+            opacity: 0;
+        }
+        .nav-link.active {
+            background-color: #0284c7; /* sky-600 */
+            color: white;
+        }
+        .unit-title.active {
+            background-color: #334155; /* slate-700 */
+            color: white;
+        }
+        .question-list {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out;
+        }
+        /* Simple diagram styles */
+        .diagram-box { border: 2px solid #64748b; padding: 0.75rem; border-radius: 0.5rem; text-align: center; background-color: #f1f5f9; }
+        .diagram-arrow { color: #475569; font-weight: bold; }
+        .er-entity { border: 2px solid #0ea5e9; background-color: #f0f9ff; }
+        .er-entity-weak { border: 4px double #0ea5e9; background-color: #f0f9ff;}
+        .er-relationship { border: 2px solid #f97316; transform: rotate(45deg); width: 100px; height: 100px; }
+        .er-relationship-weak { border: 4px double #f97316; transform: rotate(45deg); width: 100px; height: 100px; }
+        .er-rel-text { transform: rotate(-45deg); }
+        .join-circle { border: 3px solid #0ea5e9; width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative;}
+        .join-circle-right { border-color: #f97316; }
+        .join-inner { background-color: rgba(14, 165, 233, 0.3); }
+        .join-left { background-color: rgba(14, 165, 233, 0.3); }
+        .join-right { background-color: rgba(249, 115, 22, 0.3); }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+    <div class="flex h-screen">
+        <!-- Sidebar Navigation -->
+        <nav class="w-1/4 bg-slate-800 text-white overflow-y-auto hidden md:block">
+            <div class="p-6">
+                <h1 class="text-2xl font-bold text-sky-400">RDBMS Guide</h1>
+                <p class="text-sm text-slate-400 mt-1">Interactive Q&A</p>
+            </div>
+            <ul id="navigation" class="space-y-1 p-2">
+                <!-- Navigation items will be injected by JS -->
+            </ul>
+        </nav>
+
+        <!-- Mobile Header & Dropdown -->
+        <div class="md:hidden w-full absolute top-0 left-0 bg-slate-800 p-4 z-10">
+            <div class="flex justify-between items-center">
+                <h1 class="text-xl font-bold text-sky-400">RDBMS Guide</h1>
+                <select id="mobile-nav" class="bg-slate-700 text-white rounded p-2">
+                    <!-- Mobile nav options will be injected by JS -->
+                </select>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="w-full md:w-3/4 p-4 md:p-8 lg:p-12 overflow-y-auto pt-24 md:pt-8">
+            <div id="content-area">
+                <!-- Content will be injected by JS -->
+                 <div id="welcome" class="content-card space-y-6">
+                    <h2 class="text-4xl font-bold text-slate-700">Welcome to the RDBMS Study Guide</h2>
+                    <p class="text-lg text-slate-600">This interactive application is designed to help you explore the key concepts of Relational Database Management Systems. The content is based on a comprehensive Q&A report covering a standard university syllabus.</p>
+                    <div class="p-6 bg-sky-100 border-l-4 border-sky-500 text-sky-800 rounded-r-lg">
+                        <h3 class="font-semibold text-xl mb-2">How to Use This Guide</h3>
+                        <p>Select a unit from the navigation menu on the left (or the dropdown on mobile) to reveal the questions for that topic. Click on a specific question to view its detailed answer in this main panel. The diagrams mentioned in the answers are rendered visually to help illustrate the concepts.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+<script>
+const qaData = [
+    {
+        unit: 1,
+        unitTitle: "Overview of Database Management",
+        questions: [
+            {
+                q: "Q1: Explain the three-schema architecture in DBMS. Illustrate with a diagram.",
+                a: `
+                    <p class="mb-4">The **three-schema architecture** is a fundamental framework in DBMS design that separates the user view of data from the physical storage details. Its main purpose is to achieve **data independence**, allowing changes at one level without affecting the others.</p>
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">The Three Levels of Abstraction</h4>
+                    <ol class="list-decimal list-inside space-y-4 mb-6 pl-4">
+                        <li><strong>External Level (View Level):</strong> This is the highest level, presenting data customized for a specific user group. It describes only the relevant part of the entire database, hiding details of other users' data and the underlying conceptual/internal schema. Multiple external views can exist.</li>
+                        <li><strong>Conceptual Level (Logical Level):</strong> This describes the structure of the entire database for the community of users. It defines all entities, attributes, relationships, and constraints, focusing on *what* data is stored. It hides physical storage details but includes data security and integrity information. This level is managed by the **Database Administrator (DBA)**.</li>
+                        <li><strong>Internal Level (Physical Level):</strong> This is the lowest level, describing *how* the data is physically stored on the storage media. It deals with complex low-level data structures, file organization (sequential, indexed), indexing, and access paths.</li>
+                    </ol>
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">Data Independence</h4>
+                    <p class="mb-4">The mappings between these levels provide two types of data independence:</p>
+                    <ul class="list-disc list-inside space-y-2 pl-4">
+                        <li><strong>Logical Data Independence:</strong> The ability to change the **conceptual schema** (e.g., adding a new field to a table) without affecting the **external schemas** (user views) or the application programs that rely on them.</li>
+                        <li><strong>Physical Data Independence:</strong> The ability to change the **internal schema** (e.g., changing file organization or adding a new index) without affecting the **conceptual schema**. This is easier to achieve than logical independence.</li>
+                    </ul>
+                    <h4 class="font-semibold text-lg mb-2">Diagram of Three-Schema Architecture</h4>
+                    <div class="space-y-2 flex flex-col items-center p-4 rounded-xl bg-slate-100 border border-slate-300">
+                        <div class="flex space-x-4">
+                            <div class="diagram-box w-32 bg-sky-100 border-sky-600 font-medium">User A View</div>
+                            <div class="diagram-box w-32 bg-sky-100 border-sky-600 font-medium">User B View</div>
+                        </div>
+                        <div class="diagram-arrow text-2xl font-bold">↕ Logical Mapping</div>
+                        <div class="diagram-box w-64 bg-sky-200 border-sky-700 font-bold">Conceptual Schema (Logical Structure)</div>
+                        <div class="diagram-arrow text-2xl font-bold">↕ Physical Mapping</div>
+                        <div class="diagram-box w-96 bg-orange-200 border-orange-700 font-bold">Internal Schema (Physical Storage)</div>
+                    </div>
+                `
+            },
+            {
+                q: "Q2: Compare and contrast the file-oriented approach and the database-oriented approach to data management.",
+                a: `
+                    <p class="mb-4">Historically, organizations managed data using traditional operating system files (the **file-oriented approach**). The **database-oriented approach** (using a DBMS) emerged to solve the critical problems inherent in the file system.</p>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">File-Oriented System Problems (The Case for DBMS)</h4>
+                    <ul class="list-disc list-inside space-y-2 pl-4">
+                        <li>**Data Redundancy and Inconsistency:** The same data is stored multiple times in different files. When data is updated in one file but not others, it leads to inconsistency.</li>
+                        <li>**Difficulty in Accessing Data (Data Isolation):** Data is scattered in various files, and new programs must be written every time a non-standard query or report is needed.</li>
+                        <li>**Integrity Problems:** Constraints (e.g., age must be > 18) must be coded into every application program, leading to inconsistency if rules change or are implemented differently across programs.</li>
+                        <li>**Atomicity and Concurrent Access Anomalies:** Handling concurrent access by multiple users is complex, often leading to lost updates. If a transaction fails mid-way, the recovery is difficult and can leave data in an inconsistent state.</li>
+                    </ul>
+                    
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">Comparison Table: File vs. DBMS</h4>
+                    <div class="overflow-x-auto mt-4">
+                        <table class="w-full min-w-full text-left border-collapse border border-slate-400">
+                            <thead>
+                                <tr class="bg-slate-700 text-white">
+                                    <th class="p-3 font-semibold border-b border-slate-600">Feature</th>
+                                    <th class="p-3 font-semibold border-b border-slate-600">File-Oriented Approach</th>
+                                    <th class="p-3 font-semibold border-b border-slate-600">Database-Oriented Approach (DBMS)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b border-slate-200">
+                                    <td class="p-3 font-medium">Redundancy & Isolation</td>
+                                    <td class="p-3">High redundancy; data scattered and isolated.</td>
+                                    <td class="p-3">Controlled redundancy; data centralized and accessible.</td>
+                                </tr>
+                                <tr class="border-b border-slate-200 bg-slate-100">
+                                    <td class="p-3 font-medium">Data Integrity</td>
+                                    <td class="p-3">Application-dependent; high risk of inconsistency.</td>
+                                    <td class="p-3">DBMS enforces centralized constraints; high consistency.</td>
+                                </tr>
+                                 <tr class="border-b border-slate-200">
+                                    <td class="p-3 font-medium">Concurrency & Recovery</td>
+                                    <td class="p-3">Poorly supported; high risk of data corruption.</td>
+                                    <td class="p-3">Robust support for concurrent transactions and automated recovery (ACID).</td>
+                                </tr>
+                                <tr class="border-b border-slate-200 bg-slate-100">
+                                    <td class="p-3 font-medium">Security</td>
+                                    <td class="p-3">Relies on OS file permissions (weak).</td>
+                                    <td class="p-3">Sophisticated access control (GRANT/REVOKE) and auditing.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="mt-4">In essence, the DBMS treats data as a shared, integrated corporate resource, whereas the file system treats it as a byproduct of individual applications.</p>
+                `
+            },
+            {
+                q: "Q3: Describe the different kinds of DBMS users and their roles.",
+                a: `
+                    <p class="mb-4">Database users interact with the DBMS in various capacities, defined by their technical expertise and access needs:</p>
+                    
+                    <ul class="space-y-4 mt-4 list-disc list-inside pl-4">
+                        <li><strong>Database Administrator (DBA):</strong> The central authority for managing the database.
+                            <ul class="list-[circle] list-inside ml-4 mt-1">
+                                <li>**Roles:** Defining the **conceptual schema**; granting/revoking user access and privileges; managing storage structures and access methods; tuning performance; and implementing backup/recovery procedures. The DBA is responsible for the overall efficiency and security of the system.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Application Programmers (Software Engineers):</strong> Developers who write programs that interact with the database, often using **Embedded SQL** or **APIs** (like ODBC/JDBC).
+                            <ul class="list-[circle] list-inside ml-4 mt-1">
+                                <li>**Roles:** Designing and implementing complex application logic that performs business tasks (e.g., inventory management, online transactions). They are concerned with the logical view of the data.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Sophisticated Users:</strong> Users who interact directly with the database using a powerful query language like SQL.
+                            <ul class="list-[circle] list-inside ml-4 mt-1">
+                                <li>**Roles:** Typically data scientists, business analysts, or engineers who need ad-hoc querying, complex analysis, and report generation, requiring deep knowledge of the database structure.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Naive Users (End Users):</strong> Users who access the database through a simple, pre-built application interface (GUI).
+                            <ul class="list-[circle] list-inside ml-4 mt-1">
+                                <li>**Roles:** They perform routine transactions without knowing the underlying data structure or query language (e.g., a bank teller checking an account balance, an online shopper submitting an order).</li>
+                            </ul>
+                        </li>
+                    </ul>
+                `
+            },
+            {
+                q: "Q4: Briefly explain the hierarchical, network, and relational data models with simple diagrams.",
+                a: `
+                    <p class="mb-4">Data models are collections of conceptual tools for describing data, data relationships, data semantics, and consistency constraints. The three major historical models are:</p>
+
+                    <ul class="space-y-6 mt-4">
+                        <li>
+                            <h4 class="font-semibold text-xl mb-2 text-slate-700">Hierarchical Model (Tree Structure)</h4>
+                            <p>Data is organized into a **tree structure**. Records are connected by links, forming a parent/child relationship. A child can have only one parent. This model is simple but struggles to represent complex **many-to-many** relationships efficiently.</p>
+                            <div class="flex flex-col items-center bg-slate-100 p-4 rounded-lg border border-slate-300">
+                                <div class="diagram-box w-32 bg-sky-200">Department (Root)</div>
+                                <div class="diagram-arrow">↓</div>
+                                <div class="flex space-x-4">
+                                    <div class="diagram-box w-32">Professor</div>
+                                    <div class="diagram-box w-32">Course</div>
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <h4 class="font-semibold text-xl mb-2 text-slate-700">Network Model (Graph Structure)</h4>
+                            <p>This model is an extension of the hierarchical model, allowing a record (child) to have **multiple parents**. This structure forms an arbitrary graph, allowing for better representation of complex relationships than the hierarchical model, but navigation remains complex as it relies on explicit link following.</p>
+                            <div class="flex items-center justify-center bg-slate-100 p-4 rounded-lg border border-slate-300">
+                                <div class="diagram-box w-32">Student</div>
+                                <div class="flex flex-col space-y-4 mx-4">
+                                    <div class="diagram-arrow font-bold text-base">↔</div>
+                                    <div class="diagram-arrow font-bold text-base">↔</div>
+                                </div>
+                                <div class="flex flex-col space-y-4">
+                                    <div class="diagram-box w-32 bg-orange-200">Course</div>
+                                    <div class="diagram-box w-32 bg-orange-200">Library</div>
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <h4 class="font-semibold text-xl mb-2 text-slate-700">Relational Model (Table Structure)</h4>
+                            <p>This is the dominant model, where data is represented by a collection of **two-dimensional tables** called **relations**. Relationships are established implicitly through common attribute values (keys), rather than explicit links. It offers a mathematically sound foundation (Relational Algebra) and simplicity of design.</p>
+                            <div class="flex items-center justify-center space-x-8 bg-slate-100 p-4 rounded-lg border border-slate-300">
+                                <div class="diagram-box w-48 bg-sky-200">STUDENT(<u>ID</u>, Name)</div>
+                                <div class="diagram-arrow text-2xl">↔ (via ID)</div>
+                                <div class="diagram-box w-48 bg-sky-200">ENROLLMENT(<u>ID</u>, CourseID)</div>
+                            </div>
+                        </li>
+                    </ul>
+                `
+            },
+            {
+                q: "Q5: What is data independence? Explain the difference between logical and physical data independence.",
+                a: `
+                    <p class="mb-4">**Data Independence** is the ability to change the schema definition at one level of the three-schema architecture without having to change the schema definition at the next higher level. It is crucial because it insulates application programs from changes in the data's organization, improving system maintainability and flexibility.</p>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">1. Physical Data Independence (PDI)</h4>
+                    <p>PDI refers to the immunity of the conceptual schema to changes in the **internal schema** (physical storage). This means you can alter the physical storage mechanisms without impacting the logical structure of the database or the application programs.</p>
+                    <ul class="list-disc list-inside space-y-2 pl-4 mt-2">
+                        <li>**What can change:** Changing from a sequential file organization to an indexed file; migrating storage devices; adding or removing indexes.</li>
+                        <li>**Why it matters:** The DBA can tune the database for performance by adjusting storage without requiring application programmers to rewrite their code.</li>
+                    </ul>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">2. Logical Data Independence (LDI)</h4>
+                    <p>LDI refers to the immunity of the external schemas (views) to changes in the **conceptual schema** (logical structure of the whole database). LDI is more difficult to achieve than PDI because the external schema is closely tied to the conceptual schema.</p>
+                    <ul class="list-disc list-inside space-y-2 pl-4 mt-2">
+                        <li>**What can change:** Adding a new entity type or adding a new attribute to an existing entity.</li>
+                        <li>**Why it matters:** Existing application programs are unaffected when non-relevant data is added to the database. If a program only uses attributes A, B, and C, adding attribute D to the table won't require modifying that program.</li>
+                    </ul>
+                    <div class="p-4 bg-sky-100 border-l-4 border-sky-500 rounded-r-lg mt-6">
+                        <p class="font-semibold">Key Difference:</p>
+                        <p>PDI shields the user from changes in **hardware and access paths**; LDI shields the user from changes in **the logical definition of data**.</p>
+                    </div>
+                `
+            }
+        ]
+    },
+    {
+        unit: 2,
+        unitTitle: "Relational Model",
+        questions: [
+            {
+                q: "Q1: Explain the components of an ER model: entities, attributes, and relationships. Provide an ER diagram for a simple 'University' system.",
+                a: `
+                    <p class="mb-4">The **Entity-Relationship (ER) model** is a high-level conceptual data model used to represent the database structure in a graphical and intuitive way. Its components map the real world:</p>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">1. Entities and Entity Sets</h4>
+                    <p>An **entity** is a real-world object (person, place, concept) that is distinguishable from others (e.g., specific student named "Alice"). An **entity set** is a collection of similar entities (e.g., all students). In ER diagrams, entities are represented by **rectangles**.</p>
+                    
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">2. Attributes</h4>
+                    <p>Attributes are the descriptive properties of an entity. They describe an entity's characteristics. In diagrams, they are represented by **ovals**.</p>
+                    <ul class="list-disc list-inside space-y-2 pl-4 mt-2">
+                        <li>**Simple vs. Composite:** Simple attributes (e.g., ID) cannot be divided; composite attributes (e.g., FullName) can be broken into simpler components (FirstName, LastName).</li>
+                        <li>**Single-valued vs. Multi-valued:** Single-valued attributes have one value per entity (e.g., ID); multi-valued attributes can have multiple values (e.g., Phone_Number). Multi-valued attributes are represented by **double ovals**.</li>
+                        <li>**Derived:** Attributes whose values can be calculated from other attributes (e.g., Age can be derived from Date_of_Birth). Represented by **dashed ovals**.</li>
+                    </ul>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">3. Relationships and Relationship Sets</h4>
+                    <p>A **relationship** is an association among several entities (e.g., a student "enrolled in" a course). A **relationship set** is a collection of similar relationships. In diagrams, relationships are represented by **diamonds**.</p>
+                    <p>Relationships are defined by **Cardinality Constraints** (One-to-One, One-to-Many, Many-to-Many) and **Participation Constraints** (Total or Partial participation).</p>
+
+                    <h4 class="font-semibold text-lg mb-2">ER Diagram for a Simple University System</h4>
+                    <div class="flex items-center justify-center space-x-4 p-8 bg-slate-100 rounded-lg border border-slate-300">
+                        <div class="diagram-box er-entity p-4 w-32">Student</div>
+                        <div class="flex items-center justify-center er-relationship relative w-24 h-24">
+                            <span class="er-rel-text absolute text-sm font-semibold text-orange-800">Enroll</span>
+                        </div>
+                        <div class="diagram-box er-entity p-4 w-32">Course</div>
+                    </div>
+                    <p class="mt-2 text-center text-sm text-slate-500">This represents a typical Many-to-Many relationship where many students enroll in many courses.</p>
+                `
+            },
+            {
+                q: "Q2: Define Candidate, Primary, Alternate, and Foreign keys with a clear example.",
+                a: `
+                    <p class="mb-4">Keys are crucial for enforcing the integrity of a relation and establishing links between relations:</p>
+                    
+                    <ul class="space-y-4 mt-4 list-disc list-inside pl-4">
+                        <li>
+                            <p><strong>Candidate Key (CK):</strong> A minimal set of attributes that can uniquely identify a tuple (row) in a relation. "Minimal" means no subset of the attributes can also be a key. A table can have multiple Candidate Keys.</p>
+                            <p class="ml-4 p-2 bg-slate-100 rounded-lg"><em>Example:</em> In a <code>STUDENT</code> table with attributes (StudentID, SSN, Name, Email), both **{StudentID}** and **{SSN}** are candidate keys, assuming both are unique identifiers.</p>
+                        </li>
+                        <li>
+                            <p><strong>Primary Key (PK):</strong> One of the candidate keys chosen by the database designer to be the principal identifier for the relation. The PK is vital for table integrity and must satisfy two main rules: **uniqueness** and **not null** (no attribute in the PK can be null).</p>
+                            <p class="ml-4 p-2 bg-slate-100 rounded-lg"><em>Example:</em> The designer selects **{StudentID}** as the Primary Key.</p>
+                        </li>
+                        <li>
+                            <p><strong>Alternate Key (AK):</strong> Any candidate key that was not chosen as the Primary Key. These keys still maintain the uniqueness property but are not used for primary identification.</p>
+                            <p class="ml-4 p-2 bg-slate-100 rounded-lg"><em>Example:</em> **{SSN}** becomes the Alternate Key.</p>
+                        </li>
+                        <li>
+                            <p><strong>Foreign Key (FK):</strong> A set of attributes in one relation (**referencing table**) whose values must match the primary key (or candidate key) values of another relation (**referenced table**). The FK enforces **referential integrity**, ensuring valid links between tables.</p>
+                            <p class="ml-4 p-2 bg-slate-100 rounded-lg"><em>Example:</em> If an <code>ORDER</code> table has a **CustomerID** field that references the Primary Key of the <code>CUSTOMER</code> table, then **CustomerID** in the <code>ORDER</code> table is a Foreign Key. This ensures every order belongs to an existing customer.</p>
+                        </li>
+                    </ul>
+                `
+            },
+            {
+                q: "Q3: Explain generalization and specialization in the context of ER models. Provide a diagram.",
+                a: `
+                    <p class="mb-4">**Generalization** and **Specialization** are abstraction mechanisms used in the Extended ER (EER) model to model superclass/subclass hierarchies, representing an "is-a" relationship.</p>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">Specialization (Top-Down)</h4>
+                    <p>This is the process of defining subsets (subclasses) of a higher-level entity set (superclass) that possess unique attributes or participate in specific relationships. The subclasses inherit all attributes and relationships of the superclass. </p>
+                    <ul class="list-disc list-inside space-y-2 pl-4 mt-2">
+                        <li>**Example:** The entity set <code>EMPLOYEE</code> can be specialized into <code>SALARIED_EMPLOYEE</code> (with an attribute like 'MonthlySalary') and <code>HOURLY_EMPLOYEE</code> (with an attribute like 'HourlyRate').</li>
+                    </ul>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">Generalization (Bottom-Up)</h4>
+                    <p>This is the reverse process: identifying common features among several entity sets and abstracting them into a single, higher-level entity set (superclass). This minimizes redundancy.</p>
+                    <ul class="list-disc list-inside space-y-2 pl-4 mt-2">
+                        <li>**Example:** Recognizing that <code>CAR</code> and <code>TRUCK</code> entities share common attributes (e.g., VIN, Color) and generalizing them into a superclass called <code>VEHICLE</code>.</li>
+                    </ul>
+
+                    <h4 class="font-semibold text-lg mb-2">Diagram (Illustrating Specialization)</h4>
+                    <div class="space-y-2 flex flex-col items-center p-4 rounded-lg bg-slate-100 border border-slate-300">
+                        <div class="diagram-box w-64 bg-sky-200 border-sky-700 font-bold">ACCOUNT</div>
+                        <div class="diagram-arrow text-2xl font-bold">↓ (IS-A)</div>
+                        <div class="flex space-x-8">
+                           <div class="diagram-box w-48 bg-orange-100">SAVINGS_ACCOUNT</div>
+                           <div class="diagram-box w-48 bg-orange-100">CHECKING_ACCOUNT</div>
+                        </div>
+                    </div>
+                    <p class="mt-2 text-center text-sm text-slate-500">SAVINGS_ACCOUNT and CHECKING_ACCOUNT inherit from the superclass ACCOUNT.</p>
+                `
+            },
+            {
+                q: "Q4: What is a weak entity set? Explain its relationship with a strong entity set using an ER diagram.",
+                a: `
+                    <p class="mb-4">A **Weak Entity Set** is an entity set that does not have a sufficient set of attributes to form a **Primary Key** on its own. Its existence is dependent on a corresponding entity from another entity set, known as the **Strong Entity Set** or **Identifying Owner**.</p>
+                    
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">Characteristics of Weak Entities</h4>
+                    <ul class="list-disc list-inside space-y-2 pl-4">
+                        <li>**Existence Dependency:** A weak entity cannot exist without its strong entity owner (e.g., a "Dependent" cannot exist without an "Employee").</li>
+                        <li>**Identifying Relationship:** The relationship linking the weak entity to its strong entity is called the **identifying relationship**. It must be a one-to-many relationship from the strong entity to the weak entity.</li>
+                        <li>**Discriminator (Partial Key):** A weak entity has a set of attributes, called the discriminator, that can uniquely identify it *only within* the context of its strong entity owner. The discriminator is underlined with a dashed line in diagrams.</li>
+                        <li>**Primary Key Composition:** The PK of the weak entity is the **composite key** formed by combining the Primary Key of the strong entity owner and the weak entity's discriminator.</li>
+                    </ul>
+
+                    <h4 class="font-semibold text-lg mb-2">ER Diagram Example: Employee and Dependent</h4>
+                    <div class="flex items-center justify-center space-x-4 p-8 bg-slate-100 rounded-lg border border-slate-300">
+                        <div class="diagram-box er-entity p-4 w-32">EMPLOYEE (<u>EID</u>)</div>
+                        <div class="flex items-center justify-center er-relationship-weak relative w-24 h-24">
+                            <span class="er-rel-text absolute text-sm font-semibold text-orange-800">Manages</span>
+                        </div>
+                        <div class="diagram-box er-entity-weak p-4 w-32">DEPENDENT (<u>Name</u>)</div>
+                    </div>
+                    <p class="mt-2 text-center text-sm text-slate-500">The double-lined rectangle (DEPENDENT) and relationship (Manages) denote the weak entity set. The final PK for DEPENDENT is {EID, Name}.</p>
+                `
+            },
+            {
+                q: "Q5: Describe the main steps for converting an ER model into a relational schema.",
+                a: `
+                    <p class="mb-4">Converting an ER conceptual model into a relational logical model is a systematic process of mapping entities, relationships, and attributes to tables (relations), columns, and keys.</p>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">The Mapping Rules</h4>
+                    <ol class="list-decimal list-inside space-y-4 pl-4">
+                        <li><strong>Mapping Strong Entities:</strong>
+                            <p>For every strong entity set, create a relation (table). Include all simple attributes as columns. The entity's primary key becomes the table's primary key.</p>
+                        </li>
+                        <li><strong>Mapping Weak Entities:</strong>
+                            <p>For every weak entity set, create a relation. Include its own simple attributes and **its discriminator** as columns. Then, include the **Primary Key of the identifying strong entity** as a Foreign Key. The Primary Key of the weak entity table is the composite key of the strong entity's PK and its own discriminator.</p>
+                        </li>
+                        <li><strong>Mapping Binary 1:N Relationships:</strong>
+                            <p>In the relation representing the entity on the **'N' side**, include the **Primary Key of the entity on the '1' side** as a Foreign Key. This is the most efficient mapping for this cardinality.</p>
+                        </li>
+                        <li><strong>Mapping Binary M:N Relationships:</strong>
+                            <p>A new, separate relation (often called a **junction table**) must be created for the relationship. This new relation's columns will consist of the Primary Keys of *both* participating entities, which collectively form the **Primary Key** and also act as Foreign Keys to their respective tables.</p>
+                        </li>
+                        <li><strong>Mapping Multi-valued Attributes:</strong>
+                            <p>For every multi-valued attribute, create a separate relation. This relation will have two columns: one for the Primary Key of the original entity, and one for the multi-valued attribute itself. The combination of these two attributes forms the Primary Key of the new table.</p>
+                        </li>
+                        <li><strong>Mapping Generalization/Specialization:</strong>
+                            <p>There are multiple strategies. A common one is to create a table for the superclass and separate tables for each subclass. The subclass tables contain only specific attributes, and their Primary Key is a Foreign Key referencing the superclass Primary Key.</p>
+                        </li>
+                    </ol>
+                `
+            }
+        ]
+    },
+    {
+        unit: 3,
+        unitTitle: "Structured Query Language",
+        questions: [
+            {
+                q: "Q1: Explain INNER JOIN, LEFT OUTER JOIN, and RIGHT OUTER JOIN in SQL with examples and a simple diagram.",
+                a: `
+                    <p class="mb-4">**SQL JOINs** are used to combine records from two or more tables based on a common field (the join condition). They are essential for retrieving related data across normalized tables.</p>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">1. INNER JOIN</h4>
+                    <p>Returns only the rows that have **matching values** in both tables, effectively returning the intersection of the two datasets. Mismatched records are excluded.</p>
+                    <pre class="bg-slate-800 text-white p-3 rounded-lg text-sm mt-2"><code>SELECT E.Name, D.DeptName FROM Employee E INNER JOIN Department D ON E.DeptID = D.DeptID;</code></pre>
+                    
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">2. LEFT OUTER JOIN (or LEFT JOIN)</h4>
+                    <p>Returns **all rows from the left table** (the first table mentioned in the JOIN clause) and the matched rows from the right table. If there is no match for a row in the left table, columns from the right table will contain **NULL** values.</p>
+                    <pre class="bg-slate-800 text-white p-3 rounded-lg text-sm mt-2"><code>SELECT E.Name, D.DeptName FROM Employee E LEFT JOIN Department D ON E.DeptID = D.DeptID;</code></pre>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">3. RIGHT OUTER JOIN (or RIGHT JOIN)</h4>
+                    <p>Returns **all rows from the right table** and the matched rows from the left table. If there is no match for a row in the right table, columns from the left table will contain **NULL** values.</p>
+                    <pre class="bg-slate-800 text-white p-3 rounded-lg text-sm mt-2"><code>SELECT E.Name, D.DeptName FROM Employee E RIGHT JOIN Department D ON E.DeptID = D.DeptID;</code></pre>
+
+                    <h4 class="font-semibold text-lg mb-2 mt-6">Diagram (Venn-like Representation)</h4>
+                    <div class="grid md:grid-cols-3 gap-6 text-center p-4 bg-slate-100 rounded-lg border border-slate-300">
+                        <div>
+                            <p class="font-semibold mb-2">INNER JOIN</p>
+                            <div class="flex justify-center items-center h-20">
+                                <div class="join-circle -mr-8"><div class="join-circle join-inner w-full h-full"></div></div>
+                                <div class="join-circle join-circle-right"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="font-semibold mb-2">LEFT JOIN</p>
+                             <div class="flex justify-center items-center h-20">
+                                <div class="join-circle -mr-8 join-left"><div class="join-circle join-inner w-full h-full"></div></div>
+                                <div class="join-circle join-circle-right"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="font-semibold mb-2">RIGHT JOIN</p>
+                             <div class="flex justify-center items-center h-20">
+                                <div class="join-circle -mr-8"></div>
+                                <div class="join-circle join-circle-right join-right"><div class="join-circle join-inner w-full h-full -ml-16"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                q: "Q2: Differentiate between the GROUP BY and HAVING clauses in SQL with a clear example.",
+                a: `
+                    <p class="mb-4">Both **GROUP BY** and **HAVING** are used with aggregate functions (like SUM, COUNT, AVG), but they operate at different stages of the query execution pipeline, serving distinct purposes.</p>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">GROUP BY Clause</h4>
+                    <ul class="list-disc list-inside space-y-2 pl-4">
+                       <li>**Purpose:** Groups rows that have the same values into a set of summary rows. This is essential preparation for applying aggregate functions.</li>
+                       <li>**Execution Order:** It executes *before* aggregate functions are calculated and *before* the HAVING clause.</li>
+                       <li>**Analogy:** It defines the "buckets" into which the rows are sorted.</li>
+                    </ul>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">HAVING Clause</h4>
+                    <ul class="list-disc list-inside space-y-2 pl-4">
+                       <li>**Purpose:** Filters the groups created by the GROUP BY clause based on a specified condition. **Crucially, the condition typically involves an aggregate function.**</li>
+                       <li>**Execution Order:** It executes *after* the GROUP BY and *after* the aggregate functions have calculated values for each group.</li>
+                       <li>**Analogy:** It is the "WHERE" clause for groups, filtering based on aggregated results. (The standard WHERE clause filters individual rows *before* grouping).</li>
+                    </ul>
+
+                    <h4 class="font-semibold text-lg mb-2 mt-4">Example: Finding Departments with High Headcount</h4>
+                    <p>We want to find departments with more than 10 employees.</p>
+                    <pre class="bg-slate-800 text-white p-4 rounded-lg mt-4 text-sm"><code>
+SELECT DeptName, COUNT(EmployeeID) AS TotalEmployees
+FROM Employee
+GROUP BY DeptName  -- Group all rows by Department
+HAVING COUNT(EmployeeID) > 10; -- Filter the resulting groups where the count is greater than 10
+                    </code></pre>
+                `
+            },
+            {
+                q: "Q3: Explain correlated and non-correlated nested queries with an example for each.",
+                a: `
+                    <p class="mb-4">A **nested query** (or subquery) is a query embedded within the WHERE, FROM, or SELECT clause of another SQL query. They are categorized based on their relationship with the outer query.</p>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">1. Non-Correlated Subquery</h4>
+                    <p>This is an **independent** query. The inner query executes completely first, only once, and returns its result set to the outer query. The outer query then uses this result to complete its execution. It does not reference any columns from the outer query.</p>
+                    <pre class="bg-slate-800 text-white p-3 rounded-lg text-sm mt-2"><code>
+-- Find all employees who work in the 'Sales' department.
+SELECT Name FROM Employee
+WHERE DeptID = (SELECT DeptID FROM Department WHERE DeptName = 'Sales');
+</code></pre>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">2. Correlated Subquery</h4>
+                    <p>This is a **dependent** query. The inner query relies on the outer query for its execution and cannot be run independently. The inner query executes **repeatedly**, once for every row processed by the outer query, making it less efficient than a non-correlated subquery or a JOIN operation.</p>
+                    <pre class="bg-slate-800 text-white p-3 rounded-lg text-sm mt-2"><code>
+-- Find all employees whose salary is greater than the average salary of their OWN department.
+SELECT E1.Name, E1.Salary FROM Employee E1
+WHERE E1.Salary > (
+    SELECT AVG(E2.Salary)
+    FROM Employee E2
+    WHERE E2.DeptID = E1.DeptID -- The correlation: inner query uses E1.DeptID from the outer query
+);
+</code></pre>
+                `
+            },
+            {
+                q: "Q4: What is a trigger in SQL? Explain its purpose and structure with an example.",
+                a: `
+                    <p class="mb-4">A **trigger** is a special type of stored procedure that is automatically executed (or "fired") by the DBMS in response to a specific event occurring on a table. These events are typically Data Manipulation Language (DML) statements like <code>INSERT</code>, <code>UPDATE</code>, or <code>DELETE</code>.</p>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">Purpose of Triggers</h4>
+                    <ul class="list-disc list-inside space-y-2 pl-4">
+                        <li>**Complex Constraint Enforcement:** Enforcing intricate business rules that cannot be defined using standard declarative constraints (like check or foreign key constraints).</li>
+                        <li>**Auditing:** Creating a transparent audit trail of changes made to the data by logging old and new values, timestamps, and the user who made the change.</li>
+                        <li>**Data Derivation/Synchronization:** Automatically updating related tables (e.g., updating an inventory total after a sale) to maintain consistency and derived data.</li>
+                    </ul>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">Structure and Components</h4>
+                    <p>A trigger is defined by four main parts:</p>
+                    <ul class="list-disc list-inside space-y-2 pl-4">
+                        <li>**Event:** The DML operation (INSERT, UPDATE, DELETE) that activates the trigger.</li>
+                        <li>**Timing:** When the trigger fires relative to the event (**BEFORE** or **AFTER** the operation). BEFORE triggers can modify the data being inserted/updated; AFTER triggers record the action.</li>
+                        <li>**Granularity:** Whether the trigger fires once per statement (**FOR STATEMENT**) or once for every row affected by the statement (**FOR EACH ROW** - most common).</li>
+                        <li>**Body:** The block of procedural code (e.g., PL/SQL, T-SQL) that runs when the trigger is activated.</li>
+                    </ul>
+
+                    <h4 class="font-semibold text-lg mb-2 mt-4">Example: Auditing Salary Updates (Conceptual)</h4>
+                    <pre class="bg-slate-800 text-white p-4 rounded-lg mt-2 text-sm"><code>
+CREATE TRIGGER audit_salary_change
+AFTER UPDATE OF Salary ON Employee -- Event & Table
+FOR EACH ROW -- Granularity
+BEGIN
+    -- Body: Log the old and new salary values
+    IF OLD.Salary != NEW.Salary THEN
+        INSERT INTO Salary_Audit (EID, OldSalary, NewSalary, ChangeDate)
+        VALUES (OLD.EmployeeID, OLD.Salary, NEW.Salary, NOW());
+    END IF;
+END;
+</code></pre>
+                `
+            },
+            {
+                q: "Q5: What are SQL Views? Explain their advantages and how to create one.",
+                a: `
+                    <p class="mb-4">An **SQL View** is a **virtual table** whose content is defined by an SQL query. Unlike a regular table, a view does not store data directly; instead, it derives its data from the base tables every time it is queried.</p>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">Advantages of Using Views</h4>
+                    <ul class="list-disc list-inside space-y-2 pl-4">
+                        <li>**Security (Restricting Access):** Views allow you to grant users access to only a subset of the data (specific rows or columns) without giving them direct access to the underlying, sensitive base tables.</li>
+                        <li>**Simplification:** They hide the complexity of the database schema. Users can query a single view instead of writing complex joins and calculated fields repeatedly. This is a form of **logical data independence**.</li>
+                        <li>**Consistency and Maintainability:** Views present a consistent, structured interface to applications. If the underlying base tables are restructured (e.g., a column is moved or renamed), the view can be redefined to maintain the original structure for the application, minimizing code changes.</li>
+                        <li>**Aggregation:** Views can store pre-calculated aggregate data (e.g., total sales per month), making reporting faster.</li>
+                    </ul>
+
+                    <h4 class="font-semibold text-lg mb-2 mt-4">How to Create a View</h4>
+                    <p>Views are created using the <code>CREATE VIEW</code> command, followed by a defining <code>SELECT</code> statement.</p>
+                    <pre class="bg-slate-800 text-white p-4 rounded-lg mt-2 text-sm"><code>
+CREATE VIEW High_Value_Customers AS
+SELECT C.CustomerID, C.Name, SUM(O.Amount) AS TotalSpent
+FROM Customers C
+JOIN Orders O ON C.CustomerID = O.CustomerID
+GROUP BY C.CustomerID, C.Name
+HAVING SUM(O.Amount) > 5000;
+
+-- Usage: Querying the view is the same as querying a table
+SELECT CustomerID, Name FROM High_Value_Customers;
+</code></pre>
+                `
+            }
+        ]
+    },
+    {
+        unit: 4,
+        unitTitle: "Relational Database Design",
+        questions: [
+            {
+                q: "Q1: Why is normalization needed? Explain 1NF, 2NF, and 3NF.",
+                a: `
+                    <p class="mb-4">**Normalization** is a systematic approach to decomposing tables to eliminate redundancy and avoid data anomalies, ensuring a robust and stable database structure.</p>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">The Problem: Data Anomalies</h4>
+                    <p>Un-normalized tables suffer from **anomalies** (problems) during data manipulation:</p>
+                    <ul class="list-disc list-inside space-y-2 pl-4">
+                        <li>**Insertion Anomaly:** Cannot insert a fact about one entity without inserting a fact about another (e.g., cannot add a new department without assigning an employee to it).</li>
+                        <li>**Update Anomaly:** Requires updating the same piece of information in multiple rows. If one copy is missed, data becomes inconsistent.</li>
+                        <li>**Deletion Anomaly:** Deleting a row about one entity unintentionally deletes information about another entity (e.g., deleting the last employee in a department also deletes the department's information).</li>
+                    </ul>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">The Normal Forms</h4>
+                    <ol class="list-decimal list-inside space-y-4 pl-4">
+                        <li><strong>First Normal Form (1NF):</strong>
+                            <ul class="list-[circle] list-inside ml-4">
+                                <li>**Rule:** All attributes must be **atomic** (indivisible) and there must be **no repeating groups** of attributes.</li>
+                                <li>**Fixes:** Problems arising from storing multiple values in a single cell or having multiple, numbered columns (e.g., Phone1, Phone2).</li>
+                            </ul>
+                        </li>
+                        <li><strong>Second Normal Form (2NF):</strong>
+                            <ul class="list-[circle] list-inside ml-4">
+                                <li>**Rule:** Must be in 1NF, AND every **non-key attribute** must be **fully functionally dependent** on the **entire Primary Key**.</li>
+                                <li>**Fixes:** **Partial dependencies**. This only applies to tables with **composite primary keys**. If an attribute depends only on *part* of the key, it should be moved to a new table.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Third Normal Form (3NF):</strong>
+                            <ul class="list-[circle] list-inside ml-4">
+                                <li>**Rule:** Must be in 2NF, AND there should be **no transitive dependencies**. A transitive dependency is when a non-key attribute depends on another non-key attribute (e.g., PK → NonKey1 → NonKey2).</li>
+                                <li>**Fixes:** **Transitive dependencies**. The attribute that is indirectly dependent must be moved to a separate table, linked by the intermediate determinant.</li>
+                            </ul>
+                        </li>
+                    </ol>
+                `
+            },
+            {
+                q: "Q2: Explain Boyce-Codd Normal Form (BCNF) and how it is stricter than 3NF. Provide an example where a relation is in 3NF but not in BCNF.",
+                a: `
+                    <p class="mb-4">**Boyce-Codd Normal Form (BCNF)** is a stricter version of 3NF. It aims to eliminate all remaining anomalies caused by functional dependencies that involve candidate keys.</p>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">BCNF Rule</h4>
+                    <p>A relation is in BCNF if and only if for every non-trivial functional dependency <code>X → Y</code>, **X is a Superkey** (a candidate key or a superset of a candidate key). In simpler terms, the determinant of *every* dependency must be a candidate key.</p>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">Why BCNF is Stricter than 3NF</h4>
+                    <p>3NF allows a special case: a dependency <code>X → Y</code> is permitted even if X is not a superkey, provided that Y is a **prime attribute** (part of *some* candidate key). BCNF eliminates this exception. BCNF ensures that dependency only occurs on a determinant that uniquely identifies the row.</p>
+
+                    <h4 class="font-semibold text-lg mb-2 mt-4">Example: Relation in 3NF but not BCNF</h4>
+                    <p>Consider the relation <code>Teaching(Student, Course, Professor)</code> with the following Functional Dependencies (FDs):</p>
+                    <ul class="list-disc list-inside space-y-2 pl-4">
+                        <li>**FD1:** <code>{Student, Course} → Professor</code> (A student takes a specific course from a specific professor.)</li>
+                        <li>**FD2:** <code>Professor → Course</code> (Each professor teaches only one course.)</li>
+                    </ul>
+                    <div class="mt-4 p-3 bg-slate-100 rounded-lg border border-slate-300">
+                        <p class="font-semibold text-orange-600">Analysis:</p>
+                        <p>1. **Candidate Keys (CKs):** {Student, Course} and {Student, Professor} are both CKs.</p>
+                        <p>2. **3NF Check:** The dependency <code>Professor → Course</code> has a non-key determinant (Professor), but the dependent attribute (Course) is a prime attribute (part of the CK {Student, Course}). **Therefore, it is in 3NF.**</p>
+                        <p>3. **BCNF Check:** For the dependency <code>Professor → Course</code>, is the determinant <code>Professor</code> a Superkey? No, <code>Professor</code> alone cannot uniquely identify the <code>Student</code>. **Therefore, it is NOT in BCNF.**</p>
+                    </div>
+                    <p class="mt-4">To achieve BCNF, we decompose it into: <code>Teaching_Detail(Student, Professor)</code> and <code>Professor_Course(Professor, Course)</code>.</p>
+                `
+            },
+            {
+                q: "Q3: What is a multi-valued dependency? Explain Fourth Normal Form (4NF).",
+                a: `
+                    <p class="mb-4">**Multi-Valued Dependency (MVD)** is a constraint that holds when two attributes are multi-valued and independent of each other within a relation, leading to unnecessary redundancy.</p>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">The Problem: Multi-Valued Dependency</h4>
+                    <p>An MVD, denoted <code>A →→ B</code>, exists in a relation <code>R(A, B, C)</code> if for a single value of A, there is a set of values for B and a set of values for C, and the set of B values is independent of the set of C values. To avoid data loss, the DBMS is forced to store all combinations, causing redundancy.</p>
+                    <p class="ml-4 p-2 bg-slate-100 rounded-lg"><em>Example:</em> In <code>Course_Info (Course, Professor, Textbook)</code>, if a course has multiple professors and multiple, independent textbooks, we must repeat records to show all combinations, forcing MVDs like <code>Course →→ Professor</code> and <code>Course →→ Textbook</code>.</p>
+                    
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">Fourth Normal Form (4NF)</h4>
+                    <p>4NF is designed specifically to eliminate redundancy due to MVDs.</p>
+                    <ul class="list-disc list-inside space-y-2 pl-4">
+                        <li>**Rule:** A relation is in 4NF if it is in **BCNF** and it does not contain any **non-trivial multi-valued dependencies**. (A trivial MVD is where B is a subset of A or A ∪ B = R).</li>
+                        <li>**Decomposition:** To bring an MVD-violating table to 4NF, it must be decomposed into two separate tables, isolating the independent multi-valued attributes:
+                            <ul class="list-[circle] list-inside ml-4 mt-1">
+                                <li><code>Course_Professor (Course, Professor)</code></li>
+                                <li><code>Course_Textbook (Course, Textbook)</code></li>
+                            </ul>
+                        </li>
+                    </ul>
+                `
+            },
+            {
+                q: "Q4: Define functional dependency and explain trivial, non-trivial, and transitive dependencies.",
+                a: `
+                     <p class="mb-4">A **Functional Dependency (FD)** is a constraint between two sets of attributes, <code>X → Y</code>, stating that the value of attribute set X uniquely determines the value of attribute set Y. X is the **determinant** and Y is the **dependent**.</p>
+                     
+                     <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">Types of Functional Dependencies</h4>
+                     <ul class="space-y-4 list-disc list-inside pl-4">
+                        <li>
+                            <p><strong>Trivial Functional Dependency:</strong>
+                                <br>A dependency <code>X → Y</code> is trivial if **Y is a subset of X** (<code>Y ⊆ X</code>). These dependencies are inherently true, regardless of the data, and are not useful for normalization analysis.
+                                <br><em>Example:</em> <code>{EmployeeID, Name} → Name</code>.</p>
+                        </li>
+                        <li>
+                            <p><strong>Non-Trivial Functional Dependency:</strong>
+                                <br>A dependency <code>X → Y</code> is non-trivial if **Y is not a subset of X** (<code>Y ⊄ X</code>). These are the constraints used to drive the normalization process.
+                                <br><em>Example:</em> <code>EmployeeID → Name</code> (EmployeeID determines Name).</p>
+                        </li>
+                        <li>
+                            <p><strong>Transitive Functional Dependency:</strong>
+                                <br>An FD <code>X → Z</code> is transitive if there exists a set of attributes Y such that <code>X → Y</code> and <code>Y → Z</code>, and Y is neither a superkey nor a subset of X. Transitive dependencies are the root cause of **3NF violation**.
+                                <br><em>Example:</em> In a table <code>Employee(EID, DeptID, DeptName)</code>, we have <code>EID → DeptID</code> and <code>DeptID → DeptName</code>. Thus, <code>EID → DeptName</code> is transitive. This must be separated into <code>Employee(EID, DeptID)</code> and <code>Department(DeptID, DeptName)</code>.</p>
+                        </li>
+                     </ul>
+                `
+            },
+            {
+                q: "Q5: What is de-normalization and why might it be necessary? Discuss the trade-offs involved.",
+                a: `
+                    <p class="mb-4">**De-normalization** is the intentional process of reversing some of the steps of normalization, typically by introducing controlled redundancy, to improve the performance of read-heavy applications.</p>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">Why De-normalization is Necessary</h4>
+                    <p>Highly normalized databases (3NF/BCNF) require multiple, often complex, **JOIN operations** to retrieve meaningful data (e.g., retrieving an order's customer name requires joining <code>Orders</code> and <code>Customers</code>). In **Online Analytical Processing (OLAP)** or data warehousing environments where reads far outweigh writes, the performance overhead of these constant joins becomes a bottleneck.</p>
+                    <p>De-normalization solves this by pre-joining the data. For instance, duplicating the <code>CustomerName</code> directly into the <code>Order</code> table eliminates the need for a join when running summary reports.</p>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">Trade-offs of De-normalization</h4>
+                    <div class="grid md:grid-cols-2 gap-4 mt-4">
+                        <div class="p-4 bg-green-100 rounded-lg border border-green-500">
+                            <p class="font-semibold text-lg text-green-700 mb-2">Advantages (Read Performance)</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>**Faster Query Execution:** Reduces the number of necessary joins, significantly speeding up complex <code>SELECT</code> queries.</li>
+                                <li>**Simpler Queries:** Query writers don't need to navigate complex schemas.</li>
+                                <li>**Reduced I/O:** Less disk reading is needed since related data is consolidated.</li>
+                            </ul>
+                        </div>
+                        <div class="p-4 bg-red-100 rounded-lg border border-red-500">
+                            <p class="font-semibold text-lg text-red-700 mb-2">Disadvantages (Integrity & Write Speed)</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>**Increased Data Redundancy:** Wastes storage space.</li>
+                                <li>**Higher Risk of Inconsistency:** If redundant data is not updated everywhere, data integrity is compromised (Update Anomaly is reintroduced).</li>
+                                <li>**Slower Updates/Writes:** <code>INSERT</code>, <code>UPDATE</code>, and <code>DELETE</code> operations must now modify multiple fields, slowing down transactional processing.</li>
+                            </ul>
+                        </div>
+                    </div>
+                `
+            }
+        ]
+    },
+    {
+        unit: 5,
+        unitTitle: "Query Processing and Protection",
+        questions: [
+            {
+                q: "Q1: Explain the major steps in query processing with a block diagram.",
+                a: `
+                    <p class="mb-4">**Query Processing** is the entire sequence of activities involved in transforming a high-level user query (like SQL) into a set of low-level disk I/O operations and delivering the result. The objective is to find the most efficient execution plan.</p>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">The Three Major Stages</h4>
+                    <ol class="list-decimal list-inside space-y-3 pl-4">
+                       <li><strong>Parsing and Translation (Lexical & Syntax Check):</strong>
+                           <ul class="list-[circle] list-inside ml-4 mt-1">
+                               <li>The query is checked for correct syntax and vocabulary.</li>
+                               <li>A **semantic check** verifies table and attribute names against the data dictionary and ensures the user has appropriate privileges.</li>
+                               <li>The query is translated into an internal form, typically a **Relational Algebra Expression** or a query tree, which specifies *what* to retrieve.</li>
+                           </ul>
+                       </li>
+                       <li><strong>Optimization (Plan Selection):</strong>
+                            <ul class="list-[circle] list-inside ml-4 mt-1">
+                               <li>This is the most critical stage. The optimizer generates several alternative **Execution Plans** (e.g., different ways to join tables, different index usage).</li>
+                               <li>Using **database statistics** (size, distribution, indexing), the optimizer estimates the **cost** (time, I/O, CPU usage) for each plan.</li>
+                               <li>The optimizer selects the plan with the lowest estimated cost to execute the query.</li>
+                           </ul>
+                       </li>
+                       <li><strong>Evaluation (Execution):</strong>
+                            <ul class="list-[circle] list-inside ml-4 mt-1">
+                               <li>The **Query Execution Engine** takes the chosen optimal plan and executes the low-level data retrieval and manipulation operations.</li>
+                               <li>Data is fetched from disk, processed (filtered, joined, sorted), and the result set is prepared and returned to the user.</li>
+                           </ul>
+                       </li>
+                    </ol>
+
+                    <h4 class="font-semibold text-lg mb-2 mt-6">Block Diagram of Query Processing</h4>
+                    <div class="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4 p-4 bg-slate-100 rounded-lg border border-slate-300">
+                        <div class="diagram-box w-32 bg-sky-200">SQL Query</div>
+                        <div class="diagram-arrow">→</div>
+                        <div class="diagram-box w-32">Translation (Relational Algebra)</div>
+                        <div class="diagram-arrow">→</div>
+                        <div class="diagram-box w-32 bg-orange-200">Optimization (Plan Selection)</div>
+                        <div class="diagram-arrow">→</div>
+                        <div class="diagram-box w-32 bg-sky-200">Evaluation (Execution)</div>
+                        <div class="diagram-arrow">→</div>
+                        <div class="diagram-box w-32">Result</div>
+                    </div>
+                `
+            },
+            {
+                q: "Q2: Explain the ACID properties that govern database transactions.",
+                a: `
+                    <p class="mb-4">A **transaction** is a single logical unit of work that accesses and potentially modifies the contents of a database. The **ACID** properties are a set of principles that guarantee that transactions are processed reliably in a concurrent environment.</p>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">The ACID Acronym</h4>
+                    <ul class="space-y-4 list-disc list-inside pl-4">
+                       <li><strong>Atomicity:</strong>
+                           <br>Means "all or nothing." A transaction must either execute all its operations completely or none of them. If the transaction fails mid-way (e.g., due to a system crash), the entire transaction is undone (**rollback**), ensuring the database state remains consistent.</li>
+                       <li><strong>Consistency:</strong>
+                           <br>A transaction must bring the database from one valid state to another valid state. It ensures that any data written to the database must comply with all defined integrity constraints, rules, and business logic.</li>
+                       <li><strong>Isolation:</strong>
+                           <br>Ensures that concurrent execution of multiple transactions leaves the database in the same state that would have been obtained if the transactions were executed sequentially (serially). This prevents phenomena like dirty reads and lost updates.</li>
+                       <li><strong>Durability:</strong>
+                           <br>Guarantees that once a transaction has successfully completed and committed, the changes are permanent and will survive any subsequent system failure (e.g., power loss). This is achieved by storing the committed changes on non-volatile storage (disk) and logging them.</li>
+                    </ul>
+                `
+            },
+            {
+                q: "Q3: What is referential integrity and how is it enforced in SQL?",
+                a: `
+                    <p class="mb-4">**Referential Integrity** is a constraint that ensures that every value in a **Foreign Key** column of a **referencing table** must exist as a value in the **Primary Key** (or candidate key) of the **referenced table**. It is the rule that ensures valid, non-broken links (references) between tables.</p>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">Enforcement through Foreign Key Constraints</h4>
+                    <p>Referential integrity is enforced in SQL through the <code>FOREIGN KEY</code> constraint, which dictates how the DBMS should react when a change occurs in the referenced (parent) table that would violate the integrity rule (e.g., deleting a customer who has outstanding orders).</p>
+                    <pre class="bg-slate-800 text-white p-3 rounded-lg text-sm mt-2"><code>
+CREATE TABLE Orders (
+    OrderID INT PRIMARY KEY,
+    CustomerID INT,
+    -- Defines CustomerID as a Foreign Key referencing the Customers table
+    FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID)
+        ON DELETE CASCADE -- Action for deletion
+        ON UPDATE RESTRICT -- Action for update
+);
+                    </code></pre>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">Referential Actions</h4>
+                    <p>When a record in the parent table is deleted or its PK is updated, the DBMS must execute a defined action:</p>
+                    <ul class="list-disc list-inside space-y-2 pl-4">
+                        <li>**NO ACTION / RESTRICT (Default):** The delete/update operation on the parent table is prevented if there are dependent child records.</li>
+                        <li>**CASCADE:** The delete/update operation on the parent record is automatically applied to all matching child records (e.g., delete a customer, all their orders are deleted).</li>
+                        <li>**SET NULL:** The foreign key columns in all matching child records are set to NULL. (Requires the foreign key column to allow NULLs).</li>
+                        <li>**SET DEFAULT:** The foreign key columns in all matching child records are set to a defined default value.</li>
+                    </ul>
+                `
+            },
+            {
+                q: "Q4: Explain the purpose of the GRANT and REVOKE commands in SQL for managing database security.",
+                a: `
+                    <p class="mb-4">The **GRANT** and **REVOKE** commands are the core of SQL's **Discretionary Access Control (DAC)** mechanism. They allow the Database Administrator (DBA) to control which users can perform what operations on which database objects, ensuring data security and privacy.</p>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">1. GRANT Command</h4>
+                    <p>The <code>GRANT</code> command is used to give specific **privileges** (permissions) to a user or a role.</p>
+                    <ul class="list-disc list-inside space-y-2 pl-4">
+                        <li>**Purpose:** To enable users to perform necessary tasks while adhering to the **Principle of Least Privilege** (giving only the minimum rights required).</li>
+                        <li>**Privileges include:**
+                            <ul class="list-[circle] list-inside ml-4 mt-1">
+                                <li>DML: <code>SELECT</code>, <code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code> on tables/views.</li>
+                                <li>DDL: <code>CREATE TABLE</code>, <code>CREATE VIEW</code>, etc.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <pre class="bg-slate-800 text-white p-3 rounded-lg text-sm mt-2"><code>
+-- Grant permission to query the Employees table and update only the Email column
+GRANT SELECT, UPDATE (Email) ON Employees TO 'DataEntryUser';
+</code></pre>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">2. REVOKE Command</h4>
+                    <p>The <code>REVOKE</code> command is used to withdraw previously granted privileges from a user or role.</p>
+                    <ul class="list-disc list-inside space-y-2 pl-4">
+                        <li>**Purpose:** To instantly remove access when a user's role changes or when a security breach requires immediate restriction.</li>
+                        <li>**Option:** When revoking, the <code>CASCADE</code> option can be used to also revoke any privileges that the user had granted to others based on the initial privilege.</li>
+                    </ul>
+                    <pre class="bg-slate-800 text-white p-3 rounded-lg text-sm mt-2"><code>
+-- Revoke the ability to update the Email column
+REVOKE UPDATE (Email) ON Employees FROM 'DataEntryUser';
+</code></pre>
+                `
+            },
+            {
+                q: "Q5: Discuss three common security threats to a database system and their potential countermeasures.",
+                a: `
+                    <p class="mb-4">Database systems are constantly exposed to various threats that target the confidentiality, integrity, and availability of data. Protecting the database is paramount.</p>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">1. SQL Injection (SQLi)</h4>
+                    <ul class="list-disc list-inside space-y-2 pl-4">
+                        <li>**Threat:** An attacker injects malicious SQL code into an application's input (e.g., login form, URL parameters) which is then executed by the database. This can lead to authentication bypass, data theft, or data deletion.</li>
+                        <li>**Countermeasures:**
+                            <ul class="list-[circle] list-inside ml-4 mt-1">
+                                <li>**Prepared Statements (Parameterized Queries):** The most effective defense. It separates the SQL command from the user data, ensuring the input is treated as literal data, not executable code.</li>
+                                <li>**Input Validation:** Strictly check data types and formats of all user inputs.</li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">2. Unauthorized Access & Weak Authentication</h4>
+                    <ul class="list-disc list-inside space-y-2 pl-4">
+                        <li>**Threat:** Attackers gain access using weak passwords, default credentials, or by exploiting authentication flaws to escalate privileges (e.g., moving from a basic 'Read-Only' user to a 'DBA').</li>
+                        <li>**Countermeasures:**
+                            <ul class="list-[circle] list-inside ml-4 mt-1">
+                                <li>**Strong Authentication:** Enforce complex, regularly changing passwords and utilize **Multi-Factor Authentication (MFA)**.</li>
+                                <li>**Principle of Least Privilege:** Use the <code>GRANT</code> command to assign only the minimum necessary permissions to users and applications (Role-Based Access Control).</li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                    <h4 class="font-semibold text-xl mt-4 mb-2 text-slate-700">3. Insider Threats and Data Exfiltration</h4>
+                    <ul class="list-disc list-inside space-y-2 pl-4">
+                        <li>**Threat:** A current or former employee or partner misuses their legitimate access to steal, delete, or maliciously modify sensitive data. Often harder to detect than external attacks.</li>
+                        <li>**Countermeasures:**
+                            <ul class="list-[circle] list-inside ml-4 mt-1">
+                                <li>**Database Activity Monitoring (DAM):** Log all database queries, operations, and user sessions in real-time to detect anomalous behavior (e.g., a finance user querying HR data).</li>
+                                <li>**Data Encryption:** Encrypt sensitive data both **at rest** (on disk) and **in transit** (over the network). Even if stolen, the data is useless without the key.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                `
+            }
+        ]
+    }
+];
+
+document.addEventListener('DOMContentLoaded', function () {
+    const navigation = document.getElementById('navigation');
+    const mobileNav = document.getElementById('mobile-nav');
+    const contentArea = document.getElementById('content-area');
+    let contentMap = {};
+
+    function displayContent(id) {
+        document.querySelectorAll('.content-card').forEach(card => {
+            card.classList.add('content-hidden');
+        });
+        const activeCard = document.getElementById(id);
+        if (activeCard) {
+            activeCard.classList.remove('content-hidden');
+        }
+    }
+
+    // Populate desktop navigation and content
+    qaData.forEach((unitData, unitIndex) => {
+        const unitId = `unit-${unitData.unit}`;
+
+        const unitLi = document.createElement('li');
+        const unitTitle = document.createElement('div');
+        unitTitle.className = 'unit-title p-3 cursor-pointer bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold flex justify-between items-center';
+        unitTitle.textContent = `Unit ${unitData.unit}: ${unitData.unitTitle}`;
+        unitTitle.dataset.unit = unitId;
+
+        const arrow = document.createElement('span');
+        arrow.innerHTML = '&#9662;';
+        unitTitle.appendChild(arrow);
+        
+        unitLi.appendChild(unitTitle);
+
+        const questionList = document.createElement('ul');
+        questionList.id = unitId;
+        questionList.className = 'question-list ml-4 mt-1 space-y-1';
+        
+        unitData.questions.forEach((qData, qIndex) => {
+            const questionId = `u${unitData.unit}-q${qIndex + 1}`;
+            
+            // Create nav link
+            const qLi = document.createElement('li');
+            const qLink = document.createElement('a');
+            qLink.href = '#';
+            qLink.textContent = qData.q.split(':')[0];
+            qLink.dataset.contentId = questionId;
+            qLink.className = 'nav-link block p-2 text-slate-300 hover:bg-sky-700 hover:text-white rounded-md transition-colors duration-200';
+            qLi.appendChild(qLink);
+            questionList.appendChild(qLi);
+            
+            // Create content card
+            const contentDiv = document.createElement('div');
+            contentDiv.id = questionId;
+            contentDiv.className = 'content-card content-hidden space-y-4';
+            contentDiv.innerHTML = `
+                <h2 class="text-3xl font-bold text-slate-700 border-b-2 border-sky-500 pb-2">${qData.q}</h2>
+                <div class="text-lg leading-relaxed text-slate-600">${qData.a}</div>
+            `;
+            contentArea.appendChild(contentDiv);
+            contentMap[questionId] = contentDiv;
+        });
+
+        unitLi.appendChild(questionList);
+        navigation.appendChild(unitLi);
+    });
+    
+    // Populate mobile navigation
+    const welcomeOption = document.createElement('option');
+    welcomeOption.value = 'welcome';
+    welcomeOption.textContent = 'Welcome';
+    mobileNav.appendChild(welcomeOption);
+
+    qaData.forEach(unitData => {
+        unitData.questions.forEach((qData, qIndex) => {
+             const questionId = `u${unitData.unit}-q${qIndex + 1}`;
+             const option = document.createElement('option');
+             option.value = questionId;
+             option.textContent = `Unit ${unitData.unit} - ${qData.q.split(':')[0]}`;
+             mobileNav.appendChild(option);
+        });
+    });
+
+    // Event Listeners for Desktop Nav
+    navigation.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = e.target;
+
+        // Accordion logic
+        if (target.classList.contains('unit-title')) {
+            const list = target.nextElementSibling;
+            const arrow = target.querySelector('span');
+            document.querySelectorAll('.unit-title').forEach(t => {
+                if(t !== target) {
+                    t.classList.remove('active');
+                    t.nextElementSibling.style.maxHeight = null;
+                    t.querySelector('span').style.transform = 'rotate(0deg)';
+                }
+            });
+            target.classList.toggle('active');
+            arrow.style.transform = target.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
+            if (list.style.maxHeight) {
+                list.style.maxHeight = null;
+            } else {
+                list.style.maxHeight = list.scrollHeight + "px";
+            }
+        }
+        
+        // Link click logic
+        if (target.classList.contains('nav-link')) {
+            const contentId = target.dataset.contentId;
+            displayContent(contentId);
+
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            target.classList.add('active');
+        }
+    });
+
+    // Event Listener for Mobile Nav
+    mobileNav.addEventListener('change', function(e) {
+        displayContent(e.target.value);
+    });
+
+    // Initial State
+    displayContent('welcome');
+
+});
+</script>
+
+</body>
+</html>
